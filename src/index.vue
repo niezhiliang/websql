@@ -99,11 +99,12 @@
       create_websql: function () {
         //创建名为mydb的数据库             版本    描述      大小
           this.db = openDatabase('mydb', '1.0', 'Test DB', 2 * 1024 * 1024);
-        //创建一个名为STUDENT的表
+        //创建一个名为STUDENT的表,如果存在则不会创建
           this.db.transaction(function (tx) {
             tx.executeSql('CREATE TABLE IF NOT EXISTS STUDENT (id unique, name, sex, age)');
           });
       },
+      //向student表中动态添加一条数据  这个操作跟我们平常的操作数据库一样
       add_data: function () {
         let timestamp = Date.parse(new Date());
         console.log(timestamp)
@@ -113,15 +114,19 @@
         this.db.transaction(function (tx) {
           tx.executeSql('CREATE TABLE IF NOT EXISTS STUDENT (id unique, name, sex, age)');//id好像不能重复重复插不进去
           tx.executeSql('INSERT INTO STUDENT (id, name, sex, age) VALUES (?, ?, ?, ?)',[timestamp,name, sex, age]);
-        })
+        })//添加完之后 重写查询一边websql 使得数据同步
         this.get_data()
-      },
+        //清空input框中的值
+        this.student.age = ''
+        this.student.sex = ''
+        this.student.name = ''
+      },//查询数据
       get_data: function() {
         var arry = new Array()
         this.db.transaction(function (tx) {
           tx.executeSql('SELECT * FROM STUDENT', [], function (tx, results) {
             var len = results.rows.length, i;
-            for (i = 0; i < len; i++){
+            for (i = 0; i < len; i++){//把查出来的数据封装到一个对象里面 最后放到数组里面
               let name = results.rows.item(i).name
               let sex =  results.rows.item(i).sex
               let age =  results.rows.item(i).age
@@ -134,22 +139,19 @@
               arry.push(o)
             }
           }, null);
-        });
-        this.student.age = ''
-        this.student.sex = ''
-        this.student.name = ''
+        });//将数组赋值给vue创建的数组
         this.values = arry
-      },
+      },//动态删除表中的一条数据
       remove_data: function (index,row) {
         this.db.transaction(function(tx) {
           tx.executeSql('DELETE FROM STUDENT WHERE id = ?',[row.id]);
-        })
+        })//获取最新的数据
         this.get_data()
-      },
+      },//修改数据
       updata_data: function (index,row) {
         this.db.transaction(function (tx) {
           tx.executeSql('UPDATE STUDENT SET name = ?,sex = ?,age=? WHERE id=?',['聂志良','男',22,1522752037000]);
-        })
+        })//动态获取数据
         this.get_data()
       }
     }
