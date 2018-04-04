@@ -61,10 +61,22 @@
               </template>
             </el-table-column>
           </el-table>
-
         </Card>
       </i-col>
     </Row>
+    <el-dialog
+        title="编辑"
+        :visible.sync="editDialogVisible"
+        width="30%"
+        center>
+        <el-input placeholder="编辑姓名"></el-input>
+        <el-input placeholder="编辑性别"></el-input>
+        <el-input placeholder="编辑年龄"></el-input>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="centerDialogVisible = false;">确 定</el-button>
+        </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -79,6 +91,7 @@
           sex: '',
           age: ''
         },
+        editDialogVisible:true,
         db: '',
         deleteid: '',
         self: this,
@@ -141,17 +154,43 @@
         this.values = arry
       },
       remove_data: function (index,row) {
-        this.db.transaction(function(tx) {
-          tx.executeSql('DELETE FROM STUDENT WHERE id = ?',[row.id]);
-        })
-        this.get_data()
+        this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.db.transaction(function(tx) {
+            tx.executeSql('DELETE FROM STUDENT WHERE id = ?',[row.id]);
+          })
+          this.get_data()
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          });
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });
+        });
+
       },
       updata_data: function (index,row) {
+        this.editDialogVisible = true;
         this.db.transaction(function (tx) {
           tx.executeSql('UPDATE STUDENT SET name = ?,sex = ?,age=? WHERE id=?',['聂志良','男',22,1522752037000]);
         })
         this.get_data()
+      },
+      close(){
+
       }
     }
   }
 </script>
+
+<style scoped>
+  .el-input{
+    margin:10px auto;
+  }
+</style>
